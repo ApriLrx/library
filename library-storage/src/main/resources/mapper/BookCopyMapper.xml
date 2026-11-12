@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library.storage.mapper.BookCopyMapper">
+
+    <select id="selectByBookId" resultType="org.example.library.storage.po.BookCopyPO">
+        SELECT id, book_id, barcode, status, created_at, updated_at
+        FROM book_copy
+        WHERE book_id = #{bookId}
+        ORDER BY id
+    </select>
+
+    <select id="selectByBookIdForUpdate" resultType="org.example.library.storage.po.BookCopyPO">
+        SELECT id, book_id, barcode, status, created_at, updated_at
+        FROM book_copy
+        WHERE book_id = #{bookId}
+        ORDER BY id
+        FOR UPDATE
+    </select>
+
+    <update id="updateStatus">
+        UPDATE book_copy
+        SET status = #{status}
+        WHERE id = #{copyId}
+    </update>
+
+    <insert id="insert" parameterType="org.example.library.storage.po.BookCopyPO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO book_copy (book_id, barcode, status)
+        VALUES (#{bookId}, #{barcode}, #{status})
+    </insert>
+
+</mapper>

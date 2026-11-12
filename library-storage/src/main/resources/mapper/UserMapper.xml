@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library.storage.mapper.UserMapper">
+
+    <sql id="columns">id, user_name, password, role, status, created_at, updated_at</sql>
+
+    <select id="selectByUserName" resultType="org.example.library.storage.po.UserPO">
+        SELECT <include refid="columns"/>
+        FROM users
+        WHERE user_name = #{userName}
+    </select>
+
+    <select id="selectById" resultType="org.example.library.storage.po.UserPO">
+        SELECT <include refid="columns"/>
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library.storage.po.UserPO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (user_name, password, role, status)
+        VALUES (#{userName}, #{password}, #{role}, #{status})
+    </insert>
+
+    <select id="selectAll" resultType="org.example.library.storage.po.UserPO">
+        SELECT <include refid="columns"/>
+        FROM users
+        ORDER BY id
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM users
+    </select>
+
+    <update id="updateStatus">
+        UPDATE users SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

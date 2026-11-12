@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library.storage.mapper.BorrowRecordMapper">
+
+    <sql id="columns">id, user_id, book_id, copy_id, borrow_date, expected_due_date, returned_at, status, renew_count, operator_id, created_at, updated_at</sql>
+
+    <insert id="insert" parameterType="org.example.library.storage.po.BorrowRecordPO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO borrow_record (user_id, book_id, copy_id, borrow_date, expected_due_date, status, renew_count)
+        VALUES (#{userId}, #{bookId}, #{copyId}, #{borrowDate}, #{expectedDueDate}, #{status}, #{renewCount})
+    </insert>
+
+    <update id="updateStatus" parameterType="org.example.library.storage.po.BorrowRecordPO">
+        UPDATE borrow_record
+        SET status = #{status}, returned_at = #{returnedAt}, operator_id = #{operatorId}
+        WHERE id = #{id} AND status != 'RETURNED'
+    </update>
+
+    <select id="selectById" resultType="org.example.library.storage.po.BorrowRecordPO">
+        SELECT <include refid="columns"/>
+        FROM borrow_record
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByUser" resultType="org.example.library.storage.po.BorrowRecordPO">
+        SELECT r.id, r.user_id, r.book_id, r.copy_id, r.borrow_date, r.expected_due_date, r.returned_at,
+               r.status, r.renew_count, r.operator_id, r.created_at, r.updated_at, b.name AS book_name
+        FROM borrow_record r
+        JOIN books b ON b.id = r.book_id
+        WHERE r.user_id = #{userId}
+        <if test="status != null and status != ''"> AND r.status = #{status} </if>
+        ORDER BY r.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countByUser" resultType="long">
+        SELECT COUNT(*)
+        FROM borrow_record
+        WHERE user_id = #{userId}
+        <if test="status != null and status != ''"> AND status = #{status} </if>
+    </select>
+
+    <select id="selectAll" resultType="org.example.library.storage.po.BorrowRecordPO">
+        SELECT r.id, r.user_id, r.book_id, r.copy_id, r.borrow_date, r.expected_due_date, r.returned_at,
+               r.status, r.renew_count, r.operator_id, r.created_at, r.updated_at, b.name AS book_name, u.user_name AS user_name
+        FROM borrow_record r
+        JOIN books b ON b.id = r.book_id
+        JOIN users u ON u.id = r.user_id
+        <where>
+            <if test="userName != null and userName != ''"> u.user_name = #{userName} </if>
+        </where>
+        ORDER BY r.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM borrow_record r
+        JOIN users u ON u.id = r.user_id
+        <where>
+            <if test="userName != null and userName != ''"> u.user_name = #{userName} </if>
+        </where>
+    </select>
+
+    <select id="countActiveByUserAndBook" resultType="long">
+        SELECT COUNT(*)
+        FROM borrow_record
+        WHERE user_id = #{userId} AND book_id = #{bookId} AND status IN ('BORROWED', 'OVERDUE')
+    </select>
+
+    <select id="selectDueSoon" resultType="org.example.library.storage.po.BorrowRecordPO">
+        SELECT <include refid="columns"/>
+        FROM borrow_record
+        WHERE status = 'BORROWED' AND expected_due_date &gt;= #{from} AND expected_due_date &lt; #{to}
+    </select>
+
+    <select id="selectOverdue" resultType="org.example.library.storage.po.BorrowRecordPO">
+        SELECT <include refid="columns"/>
+        FROM borrow_record
+        WHERE status = 'BORROWED' AND expected_due_date &lt; #{now}
+    </select>
+
+    <select id="selectActiveBookIdsByUser" resultType="long">
+        SELECT book_id FROM borrow_record WHERE user_id = #{userId} AND status IN ('BORROWED', 'OVERDUE')
+    </select>
+
+</mapper>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library.storage.mapper.BookMapper">
+
+    <sql id="columns">
+        id, isbn, name, author, publisher, publish_year, description, cover_url,
+        category_id, total_count, available_count, enabled, created_at, updated_at
+    </sql>
+
+    <!-- 分类筛选：categoryId 等于「其他」分类 id 时，命中「未分类/已停用分类」的图书（数据不修改，仅展示归并） -->
+    <sql id="categoryFilter">
+        <if test="categoryId != null">
+            <choose>
+                <when test="other">
+                    AND b.category_id IN (SELECT id FROM categories WHERE enabled = 0)
+                </when>
+                <otherwise>
+                    AND b.category_id = #{categoryId}
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+
+    <select id="search" resultType="org.example.library.storage.po.BookPO">
+        SELECT <include refid="columns"/>
+        FROM books b
+        WHERE b.enabled = 1
+        <include refid="categoryFilter"/>
+        <if test="keyword != null and keyword != ''">
+            AND b.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="onlyAvailable">
+            AND b.available_count &gt; 0
+        </if>
+        ORDER BY b.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countSearch" resultType="long">
+        SELECT COUNT(*)
+        FROM books b
+        WHERE b.enabled = 1
+        <include refid="categoryFilter"/>
+        <if test="keyword != null and keyword != ''">
+            AND b.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="onlyAvailable">
+            AND b.available_count &gt; 0
+        </if>
+    </select>
+
+    <select id="selectById" resultType="org.example.library.storage.po.BookPO">
+        SELECT <include refid="columns"/>
+        FROM books
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultType="org.example.library.storage.po.BookPO">
+        SELECT <include refid="columns"/>
+        FROM books
+        WHERE id = #{id}
+        FOR UPDATE
+    </select>
+
+    <update id="updateAvailableCount">
+        UPDATE books
+        SET available_count = #{availableCount}
+        WHERE id = #{bookId}
+    </update>
+
+    <insert id="insert" parameterType="org.example.library.storage.po.BookPO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO books (isbn, name, author, publisher, publish_year, description, cover_url, category_id, total_count, available_count, enabled)
+        VALUES (#{isbn}, #{name}, #{author}, #{publisher}, #{publishYear}, #{description}, #{coverUrl}, #{categoryId}, #{totalCount}, #{availableCount}, #{enabled})
+    </insert>
+
+    <update id="update" parameterType="org.example.library.storage.po.BookPO">
+        UPDATE books
+        SET name = #{name}, author = #{author}, publisher = #{publisher}, publish_year = #{publishYear},
+            description = #{description}, cover_url = #{coverUrl}, category_id = #{categoryId}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateEnabled">
+        UPDATE books SET enabled = #{enabled} WHERE id = #{id}
+    </update>
+
+    <select id="countByIsbn" resultType="long">
+        SELECT COUNT(*) FROM books WHERE isbn = #{isbn}
+    </select>
+
+    <select id="countByIsbnExcludeId" resultType="long">
+        SELECT COUNT(*) FROM books WHERE isbn = #{isbn} AND id != #{id}
+    </select>
+
+    <select id="selectAll" resultType="org.example.library.storage.po.BookPO">
+        SELECT <include refid="columns"/>
+        FROM books
+        <where>
+            <if test="keyword != null and keyword != ''">
+                name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM books
+        <where>
+            <if test="keyword != null and keyword != ''">
+                name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+</mapper>
