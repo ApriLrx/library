@@ -121,7 +121,9 @@ function fillAdmin() {
   $('#login-password').value = 'admin123456';
 }
 
-function logout() {
+async function logout() {
+  const token = state.token;
+  // 先清本地状态并切回登录视图（同步，保证立即退出）
   state.token = state.userId = state.role = state.userName = null;
   localStorage.removeItem('token');
   localStorage.removeItem('userId');
@@ -130,6 +132,18 @@ function logout() {
   $('#app-view').style.display = 'none';
   $('#login-view').style.display = 'flex';
   $('#login-password').value = '';
+
+  // 再尽力通知后端拉黑当前 token（失败不阻塞本地退出）
+  if (token) {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+    } catch (e) {
+      // 忽略：网络异常/后端不可用也不影响本地退出
+    }
+  }
 }
 
 function enterApp() {

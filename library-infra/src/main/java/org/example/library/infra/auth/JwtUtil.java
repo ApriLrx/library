@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * 无状态 JWT（HS256）工具：载荷只放 sub(用户id) 与 role，不落敏感信息。
@@ -31,6 +32,7 @@ public class JwtUtil {
     public String generate(Long userId, Role role) {
         long now = System.currentTimeMillis();
         return Jwts.builder()
+                .setId(UUID.randomUUID().toString())
                 .setSubject(String.valueOf(userId))
                 .claim("role", role.name())
                 .setIssuedAt(new Date(now))

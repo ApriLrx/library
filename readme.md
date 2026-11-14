@@ -42,6 +42,8 @@
 
 - 登录后把返回的 `token` 放入请求头 `Authorization: Bearer <token>`（可视化界面已自动处理）。
 
+- 需要本地启动redis才能实现登出黑名单拉黑功能，未启动也不影响前端丢弃token。
+
 - 封面上传：`POST /api/files/cover`（ADMIN，multipart 参数 `file`），图片默认存 `./uploads` 目录，通过 `/uploads/**` 访问。
 
 

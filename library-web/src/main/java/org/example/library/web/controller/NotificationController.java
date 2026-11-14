@@ -31,6 +31,7 @@ public class NotificationController {
         this.notificationApplicationService = notificationApplicationService;
     }
 
+    @RequireRole({Role.READER, Role.ADMIN})
     @GetMapping
     public Result<PageResult<NotificationVO>> list(@RequestParam(defaultValue = "false") boolean unreadOnly,
                                                    @RequestParam(defaultValue = "1") int page,
@@ -41,6 +42,7 @@ public class NotificationController {
                 notifications.getItems().stream().map(NotificationVO::from).collect(Collectors.toList())));
     }
 
+    @RequireRole({Role.READER, Role.ADMIN})
     @PostMapping("/{id}/read")
     public Result<Void> markRead(@PathVariable Long id) {
         notificationApplicationService.markRead(UserContext.getUserId(), id);
